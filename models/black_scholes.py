@@ -1,12 +1,6 @@
-
 import numpy as np
 from scipy.stats import norm
-from enum import Enum
-
-class OptionRight(Enum):
-    CALL=1
-    PUT=2
-    STRADDLE=3
+from models.option import OptionRight
 
 
 class BlackScholes:
