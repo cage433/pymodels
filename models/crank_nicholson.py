@@ -46,7 +46,7 @@ class CNSolver:
         return v2
 
 
-    def solve(self, F, K, sigma, T, right, ex_style):
+    def solve(self, F, K, sigma, T, right, r, ex_style):
         def price(z, t):
             p = K * np.exp(z * sigma - 0.5 * sigma * sigma * t)
             return p
@@ -56,7 +56,6 @@ class CNSolver:
 
         def intrinsic(z, t):
             return bs(z, t).intrinsic()
-
 
         zs = self.z_vec()
         z0 = zs[0]
@@ -70,16 +69,15 @@ class CNSolver:
         dt = T / (self.n_times - 1.0)
 
         # This is the vector at time n_times - 2 - can use european values here
-        vec = list(map(lambda z: bs(z, T - dt).undiscounted_value(), zs))
+        vec = list(map(lambda z: bs(z, T - dt).undiscounted_value() * np.exp(-r * dt), zs))
 
         # Now diffuse the remaining n_times - 2 steps
         for i_near_time in range(self.n_times - 3, -1, -1):
             t_near = i_near_time * dt
             vec = self.diffuse(vec, dt, lower_bound(t_near), upper_bound(t_near))
+            vec = vec * np.exp(-r * dt)
 
         prices = list(map(lambda z: price(z, 0), zs))
         cs = CubicSpline(prices, vec)
         return np.asscalar(cs(F))
 
-    def solve_bs(self, bs):
-        return self.solve(bs.F, bs.K, bs.sigma, bs.T, bs.right, ExerciseStyle.EUROPEAN)
