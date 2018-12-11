@@ -2,6 +2,15 @@ import numpy as np
 from scipy.stats import norm
 from models.option import OptionRight
 
+class OptionCalcs:
+    def intrinsic(self, right, F, K):
+        if right is OptionRight.CALL:
+            return max(0.0, F - K)
+        if right is OptionRight.PUT:
+            return max(0.0, K - F)
+        if right is OptionRight.STRADDLE:
+            return max(K - F, F - K)
+        raise Exception(f"Unexpected option right {right}")
 
 class BlackScholes:
     def __init__(self, F, K, right, sigma, T):
@@ -26,13 +35,7 @@ class BlackScholes:
         raise Exception(f"Unexpected option right {self.right}")
 
     def intrinsic(self):
-        if self.right is OptionRight.CALL:
-            return max(0.0, self.F - self.K)
-        if self.right is OptionRight.PUT:
-            return max(0.0, self.K - self.F)
-        if self.right is OptionRight.STRADDLE:
-            return max(self.K - self.F, self.F - self.K)
-        raise Exception(f"Unexpected option right {self.right}")
+        return OptionCalcs().intrinsic(self.right, self.F, self.K)
 
     def dup(self, F=None, K=None, right=None, sigma=None, T=None):
         return BlackScholes(

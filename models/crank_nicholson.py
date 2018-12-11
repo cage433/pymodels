@@ -1,9 +1,9 @@
 import numpy as np
 
-from models.black_scholes import BlackScholes
+from models.black_scholes import BlackScholes, OptionCalcs
 from scipy.interpolate import CubicSpline
 
-from models.option import ExerciseStyle
+from models.option import ExerciseStyle, OptionRight
 
 
 class CNSolver:
@@ -37,10 +37,10 @@ class CNSolver:
         i_mid = (self.n - 1) / 2.0
         return np.fromfunction(lambda i: (i - i_mid) * self.dz, (self.n,))
 
-    def diffuse(self, vec, dt, next_low_value, next_high_value):
+    def diffuse(self, vec, dt, r, next_low_value, next_high_value):
         (m1, m2) = self._diffusion_matrices(dt)
         v1 = np.matmul(m1, vec)
-        v2 = np.linalg.solve(m2, v1)
+        v2 = np.linalg.solve(m2, v1) * np.exp(-r * dt)
         v2[0] = next_low_value
         v2[self.n - 1] = next_high_value
         return v2
@@ -57,12 +57,13 @@ class CNSolver:
         def intrinsic(z, t):
             return bs(z, t).intrinsic()
 
-        zs = self.z_vec()
+        zs: np.ndarray = self.z_vec()
         z0 = zs[0]
         zn = zs[self.n - 1]
 
         def lower_bound(t):
             return intrinsic(z0, t)
+
         def upper_bound(t):
             return intrinsic(zn, t)
 
@@ -74,8 +75,12 @@ class CNSolver:
         # Now diffuse the remaining n_times - 2 steps
         for i_near_time in range(self.n_times - 3, -1, -1):
             t_near = i_near_time * dt
-            vec = self.diffuse(vec, dt, lower_bound(t_near), upper_bound(t_near))
-            vec = vec * np.exp(-r * dt)
+            vec = self.diffuse(vec, dt, r, lower_bound(t_near), upper_bound(t_near))
+
+            if ex_style == ExerciseStyle.AMERICAN:
+                opt = OptionCalcs()
+                intrinsics = list(map(lambda z: opt.intrinsic(right, price(z, t_near), K), zs))
+                vec = np.maximum(vec, intrinsics)
 
         prices = list(map(lambda z: price(z, 0), zs))
         cs = CubicSpline(prices, vec)
