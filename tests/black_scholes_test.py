@@ -4,15 +4,15 @@ from tests.pimpedrandom import PimpedRandom
 from models.black_scholes import BlackScholes, OptionRight
 
 
-class BlackScholesTest(unittest.TestCase):
+def random_bs(rng, F=None, K=None, right=None, sigma=None, T=None):
+    F = F or (80.0 + rng.random() * 20.0)
+    K = K or (F + rng.random() * 2.0 - 1.0)
+    sigma = sigma or (rng.random() * 0.5)
+    T = T or rng.random()
+    right = right or rng.enum_choice(OptionRight)
+    return BlackScholes(F, K, right, sigma, T)
 
-    def random_bs(self, rng, F=None, K=None, right=None, sigma=None, T=None):
-        F = F or (80.0 + rng.random() * 20.0)
-        K = K or (F + rng.random() * 2.0 - 1.0)
-        sigma = sigma or (rng.random() * 0.5)
-        T = T or rng.random()
-        right = right or rng.enum_choice(OptionRight)
-        return BlackScholes(F, K, right, sigma, T)
+class BlackScholesTest(unittest.TestCase):
 
     def test_intrinsic(self):
         rng = PimpedRandom()
