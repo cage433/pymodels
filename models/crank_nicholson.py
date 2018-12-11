@@ -51,9 +51,12 @@ class CNSolver:
             p = K * np.exp(z * sigma - 0.5 * sigma * sigma * t)
             return p
 
+        def bs(z, t):
+            return BlackScholes(price(z, t), K, right, sigma, T - t)
+
         def intrinsic(z, t):
-            nt = BlackScholes(price(z, t), K, right, sigma, T).intrinsic()
-            return nt
+            return bs(z, t).intrinsic()
+
 
         zs = self.z_vec()
         z0 = zs[0]
@@ -64,13 +67,15 @@ class CNSolver:
         def upper_bound(t):
             return intrinsic(zn, t)
 
-        vec = list(map(lambda z: intrinsic(z, T), zs))
         dt = T / (self.n_times - 1.0)
 
-        for i_time in range(self.n_times - 1):
-            t_front = (self.n_times - i_time - 1)
-            vec2 = self.diffuse(vec, dt, lower_bound(t_front), upper_bound(t_front))
-            vec = vec2
+        # This is the vector at time n_times - 2 - can use european values here
+        vec = list(map(lambda z: bs(z, T - dt).undiscounted_value(), zs))
+
+        # Now diffuse the remaining n_times - 2 steps
+        for i_near_time in range(self.n_times - 3, -1, -1):
+            t_near = i_near_time * dt
+            vec = self.diffuse(vec, dt, lower_bound(t_near), upper_bound(t_near))
 
         prices = list(map(lambda z: price(z, 0), zs))
         cs = CubicSpline(prices, vec)
