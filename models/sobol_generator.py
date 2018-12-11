@@ -67,4 +67,4 @@ class SobolGenerator:
 
             count += 1
 
-        return arr
+        return np.transpose(arr)

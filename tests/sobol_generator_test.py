@@ -8,7 +8,7 @@ from tests.pimpedrandom import PimpedRandom
 
 class SobolSeqTest(unittest.TestCase):
 
-    def test_mean(self):
+    def test_distribution_is_uniform_like(self):
         rng = PimpedRandom()
 
         for _ in range(10):
@@ -17,7 +17,7 @@ class SobolSeqTest(unittest.TestCase):
             n_variables = rng.randint(1, 10)
             sd = SobolGenerator(n_variables)
             n_paths = 1 << rng.randint(8, 12)
-            sample = np.transpose(sd.generate(n_paths))
+            sample = sd.generate(n_paths)
 
             for i_var in range(n_variables):
                 v = sample[i_var]
