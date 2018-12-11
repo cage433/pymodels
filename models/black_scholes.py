@@ -34,5 +34,15 @@ class BlackScholes:
             return max(self.K - self.F, self.F - self.K)
         raise Exception(f"Unexpected option right {self.right}")
 
+    def dup(self, F=None, K=None, right=None, sigma=None, T=None):
+        return BlackScholes(
+            F or self.F,
+            K or self.K,
+            right or self.right,
+            sigma or self.sigma,
+            T or self.T
+        )
+
+
     def __repr__(self):
         return f"BlackScholes: {str(self.__dict__)}"
