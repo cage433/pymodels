@@ -4,17 +4,11 @@ from models.brownian_bridge import BrownianBridge
 import numpy as np
 
 from tests.pimpedrandom import PimpedRandom
+from tests.test_utils import random_times
 
 
 class BrownianBridgeTests(unittest.TestCase):
 
-    @staticmethod
-    def random_times(rng, n_times):
-        times = np.zeros((n_times,), float)
-        times[0] = rng.random() * 0.1
-        for i in range(1, n_times):
-            times[i] = times[i - 1] + rng.random() * 0.1
-        return times
 
     def test_spike(self):
         rng = PimpedRandom()
@@ -22,7 +16,7 @@ class BrownianBridgeTests(unittest.TestCase):
             seed = np.random.randint(0, 100 * 1000)
             rng.seed(seed)
             n_times = np.random.randint(1, 10)
-            times = self.random_times(rng, n_times)
+            times = random_times(rng, n_times)
             n_paths = 1024 << 2
             uniforms = np.random.rand(n_paths, n_times)
             bldr = BrownianBridge(times)
