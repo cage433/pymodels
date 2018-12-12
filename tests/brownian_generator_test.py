@@ -1,7 +1,6 @@
 import numpy as np
 
-from models.brownian_generator import BrownianGenerator
-from models.sobol_generator import SobolGenerator
+from models.brownian_generator import generate_brownians
 from tests.pimpedrandom import PimpedRandom
 from tests.stats_test_mixin import StatsTestMixin
 from tests.test_utils import random_times
@@ -22,8 +21,7 @@ class BrownianGeneratorTest(StatsTestMixin):
             n_times = rng.randint(50, 100)
             times = random_times(rng, n_times)
 
-            uniforms = SobolGenerator(n_variables * n_times).generate(n_paths)
-            brownians = BrownianGenerator().generate(uniforms, n_variables, times)
+            brownians = generate_brownians(n_paths, n_variables, times)
             self.assertEqual(brownians.shape, (n_paths, n_variables, n_times))
 
     def test_independence(self):
@@ -38,8 +36,7 @@ class BrownianGeneratorTest(StatsTestMixin):
             n_times = rng.randint(1, 6)
             times = random_times(rng, n_times)
 
-            uniforms = SobolGenerator(n_variables * n_times).generate(n_paths)
-            brownians = BrownianGenerator().generate(uniforms, n_variables, times)
+            brownians = generate_brownians(n_paths, n_variables, times)
 
             for i_time in range(n_times):
                 for i_var in range(n_variables):

@@ -4,10 +4,11 @@ from numpy import sqrt, log, exp
 import numpy as np
 from scipy.interpolate import CubicSpline
 
+from models.brownian_generator import generate_brownians
 from models.option import ExerciseStyle, OptionRight
 
 
-def intrinsic_value(right: OptionRight, strike: float, fwd_price: float) -> float:
+def intrinsic_value(right: OptionRight, strike: float, fwd_price: float):
     if right is OptionRight.CALL:
         return max(0.0, fwd_price - strike)
     if right is OptionRight.PUT:
@@ -37,7 +38,8 @@ def black_scholes(
         return (1.0 - 2.0 * N2) * strike - (1. - 2.0 * N1) * fwd_price
     raise Exception(f"Unexpected option right {right}")
 
-def crank_nicholsonn_value(
+
+def crank_nicholson_value(
         right: OptionRight,
         ex_style: ExerciseStyle,
         strike: float,
@@ -46,7 +48,6 @@ def crank_nicholsonn_value(
         r: float,
         time_to_expiry: float,
         n: int, n_times: int, std_devs: float) -> float:
-
     dz = 2.0 * std_devs / (n - 1.0)
     dt = time_to_expiry / (n_times - 1.0)
 
@@ -117,3 +118,21 @@ def crank_nicholsonn_value(
     cs = CubicSpline(prices, vec)
     return np.asscalar(cs(fwd_price))
 
+
+def monte_carlo_european_value(
+        right: OptionRight,
+        strike: float,
+        fwd_price: float,
+        sigma: float,
+        r: float,
+        time_to_expiry: float,
+        n_paths: int) -> float:
+    def to_payoff(z: float):
+        price = fwd_price * exp(z * sigma - 0.5 * sigma * sigma * time_to_expiry)
+        return intrinsic_value(right, strike, price)
+
+    brownians = generate_brownians(n_paths, n_variables=1, times=np.array([time_to_expiry]))[:, 0, 0]
+
+    payoffs = np.vectorize(to_payoff)(brownians)
+    disc = exp(-r * time_to_expiry)
+    return np.mean(payoffs) * disc

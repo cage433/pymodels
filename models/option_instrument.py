@@ -1,4 +1,4 @@
-from models.option_calcs import intrinsic_value, black_scholes, crank_nicholsonn_value
+from models.option_calcs import intrinsic_value, black_scholes, crank_nicholson_value, monte_carlo_european_value
 from models.option import OptionRight, ExerciseStyle
 from models.day import Day
 from numpy import exp
@@ -23,9 +23,13 @@ class OptionInstrument:
         disc = exp(-r * t)
         return self.undiscounted_european_value(market_day, fwd_price, sigma) * disc
 
+    def mc_european_value(self, market_day: Day, fwd_price: float, sigma: float, r: float):
+        t = self.expiry.time_since(market_day)
+        return monte_carlo_european_value(self.right, self.strike, fwd_price, sigma, r, t, n_paths=2048)
+
     def cn_value(self, market_day: Day, fwd_price: float, sigma: float, r: float) -> float:
         t = self.expiry.time_since(market_day)
-        return crank_nicholsonn_value(
+        return crank_nicholson_value(
             self.right, self.ex_style, self.strike, fwd_price, sigma, r, t,
             100, 100, 4
         )

@@ -15,7 +15,6 @@ def random_option(
         right: OptionRight = None,
         expiry: Day = None,
         ex_style: ExerciseStyle = None):
-
     return OptionInstrument(
         strike or 80.0 + rng.random() * 20,
         right or rng.enum_choice(OptionRight),
@@ -104,5 +103,20 @@ class OptionCalcsTest(unittest.TestCase):
         self.assertAlmostEqual(cn_value, intrinsic, delta=0.01)
         self.assertLess(european_value, intrinsic)
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_mc_value_close_to_bs(self):
+        rng = PimpedRandom()
+
+        for _ in range(5):
+            seed = np.random.randint(0, 100 * 1000)
+            rng.seed(seed)
+
+            market_day = Day(2018, 1, 1)
+            option = random_option(rng, ex_style=ExerciseStyle.EUROPEAN)
+            fwd_price = rng.uniform(option.strike - 1.0, option.strike + 1.0)
+            sigma = rng.random() * 0.5
+            r = 0.1 * rng.random()
+
+            mc_value = option.mc_european_value(market_day, fwd_price, sigma, r)
+            bs_value = option.european_value(market_day, fwd_price, sigma, r)
+
+            self.assertAlmostEqual(mc_value, bs_value, delta=0.1, msg=f"Seesd was {seed}")
