@@ -14,13 +14,11 @@ class SobolGenerator:
         p = re.compile(" +")
 
         def build_direction(line):
-            # print(f"Direction for {line}")
             arr = list(map(int, p.split(line.strip())))
             a = arr[2]
             m = arr[3:]
             m.insert(0, 0)
             s = len(m) - 1
-            # print(f"Primitive {arr[0]}, a {a}, m {np.array(m)}")
             direction = np.zeros((self.bits + 1,), int)
 
             for i in range(1, s + 1):
@@ -32,11 +30,9 @@ class SobolGenerator:
                     x = a >> (s - 1 - k)
                     y = x & 1
                     z = y * direction[i - k]
-                    # print(f"i {i}, k {k}, x {x}, y {y}, z {z}")
 
                     direction[i] = direction[i] ^ z  # (((a >> (s - 1 - k)) & 1) * direction[i - k])
 
-            # print(f"Direction form {line} is {np.array(direction)}")
             return list(direction)
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
