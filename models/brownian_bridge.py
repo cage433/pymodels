@@ -76,7 +76,7 @@ class BrownianBridge:
         if len(uniform_sample) != len(self.times):
             raise (Exception(f"uniform sample has invalid length"))
 
-        normal_sample = list(map(ndtri, uniform_sample))
+        normal_sample = ndtri(uniform_sample)
         path = np.zeros((self.n_times,), float)
         path[self.n_times - 1] = self.stddev[0] * normal_sample[0]
 

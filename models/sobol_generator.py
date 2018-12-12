@@ -3,7 +3,6 @@ import re
 import numpy as np
 
 
-
 class SobolGenerator:
     def __init__(self, n_variables):
 
@@ -33,33 +32,35 @@ class SobolGenerator:
 
                     direction[i] = direction[i] ^ z  # (((a >> (s - 1 - k)) & 1) * direction[i - k])
 
-            return list(direction)
+            return direction
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-
-        with open(f"{dir_path}/resources/new-joe-kuo-7.21201", "r") as f:
-            self.directions = [build_direction(x) for x in f.readlines()[1:n_variables]]
+        self.directions = np.zeros((n_variables, self.bits + 1), int)
+        with open(f"{os.path.dirname(os.path.realpath(__file__))}/resources/new-joe-kuo-7.21201", "r") as f:
+            head = [next(f) for x in range(n_variables)]
+            for i, line in enumerate(head[1:]):
+                self.directions[i + 1] = build_direction(line)
 
         one_direction = [1 << (self.bits - i) for i in range(1, self.bits + 1)]
         one_direction.insert(0, 0)
 
-        self.directions.insert(0, one_direction)
+        self.directions[0] = np.array(one_direction)
 
     def generate(self, n_paths):
 
         arr = np.zeros((n_paths, self.n_variables), float)
         x = np.zeros((self.n_variables,), int)
         count = 1
+        var_range = range(self.n_variables)
         for i_path in range(n_paths):
             c = 1
             value = count - 1
             while (value & 1) == 1:
-                value = value >> 1
+                value >>= 1
                 c += 1
 
-            for i_var in range(self.n_variables):
-                x[i_var] = x[i_var] ^ self.directions[i_var][c]
-                arr[i_path][i_var] = x[i_var] * self.scale
+            for i_var in var_range:
+                x[i_var] ^= self.directions[i_var, c]
+                arr[i_path, i_var] = x[i_var] * self.scale
 
             count += 1
 

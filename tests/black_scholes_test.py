@@ -13,6 +13,7 @@ def random_bs(rng, F=None, K=None, right=None, sigma=None, T=None):
     right = right or rng.enum_choice(OptionRight)
     return BlackScholes(F, K, right, sigma, T)
 
+
 class BlackScholesTest(unittest.TestCase):
 
     def test_intrinsic(self):
@@ -20,7 +21,7 @@ class BlackScholesTest(unittest.TestCase):
         for _ in range(100):
             seed = np.random.randint(0, 100 * 1000)
             rng.seed(seed)
-            bs = self.random_bs(rng, sigma=1e-6)
+            bs = random_bs(rng, sigma=1e-6)
 
             self.assertAlmostEqual(
                 bs.intrinsic(),
