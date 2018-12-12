@@ -1,12 +1,11 @@
-import unittest
 import numpy as np
-from scipy.stats.stats import pearsonr
 
 from models.sobol_generator import SobolGenerator
 from tests.pimpedrandom import PimpedRandom
+from tests.stats_test_mixin import StatsTestMixin
 
 
-class SobolSeqTest(unittest.TestCase):
+class SobolSeqTest(StatsTestMixin):
 
     def test_distribution_is_uniform_like(self):
         rng = PimpedRandom()
@@ -22,14 +21,12 @@ class SobolSeqTest(unittest.TestCase):
             for i_var in range(n_variables):
                 v = sample[i_var]
 
-                self.assertAlmostEqual(0.5, np.asscalar(np.mean(v)), delta=0.01, msg=f"Seed = {seed}")
-                self.assertAlmostEqual(1.0 / np.sqrt(12), np.asscalar(np.std(v)), delta=0.01, msg=f"Seed = {seed}")
+                self.check_mean(v, expected=0.5, tol=0.03, msg=f"Seed = {seed}")
+                self.check_std_dev(v, expected=1.0 / np.sqrt(12), tol=0.01, msg=f"Seed = {seed}")
 
-                for j_var in range(n_variables):
-                    if i_var != j_var:
-                        self.assertAlmostEqual(
-                            0.0,
-                            pearsonr(sample[i_var], sample[j_var])[0],
-                            delta=0.03,
-                            msg=f"Seed = {seed}"
-                        )
+                for j_var in range(i_var + 1, n_variables):
+                    self.check_uncorrelated(
+                        sample[i_var], sample[j_var],
+                        tol=0.03,
+                        msg=f"Seed = {seed}"
+                    )
